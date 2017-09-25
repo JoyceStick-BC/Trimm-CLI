@@ -7,8 +7,12 @@ import zipfile
 @click.command()
 @click.option('--name', prompt='Please enter your name/package', help='Your package name in format name/package.')
 @click.option('--path', help='Absolute path to install packages. Defaults to current dir.')
-def pull(name, path):
+@click.option('--version', help='Version number for package.')
+def pull(name, path, version):
     url = "http://snatch.joycestick.com/api/" + name
+    if version is not None:
+        url += "/" + version
+
     download(url, path)
 
 
