@@ -1,0 +1,35 @@
+{
+    "assets": [
+        {
+            "type": "asset",
+            "version": "0.01--prerelease",
+            "username": "joyce",
+            "name": "cat",
+            "bundlename": "joyce/cat"
+        },
+        {
+            "type": "asset",
+            "version": "1.0",
+            "username": "joyce",
+            "name": "dog",
+            "bundlename": "joyce/dog"
+        }
+    ],
+
+    "packages": [
+        {
+            "type": "package",
+            "version": "1.0",
+            "username": "joyce",
+            "name": "calypso",
+            "bundlename": "joyce/calypso"
+        },
+        {
+            "type": "package",
+            "version": "0.1--alpha",
+            "username": "joyce",
+            "name": "sandbox",
+            "bundlename": "joyce/sandbox"
+        }
+    ]
+}
