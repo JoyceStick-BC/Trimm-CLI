@@ -26,16 +26,13 @@ def install(name, path, version):
 @cli.command()
 @click.option('--path', help='Absolute path to locate info.json. Defaults to currentDir/Assets/vendor.')
 def pull(path):
-    # check json for new assets and/or new versions of assets
-    # download(url, path)
-
     if path is None:
         path = os.getcwd() + os.pathsep + "Assets" + os.pathsep + "vendor" + os.pathsep
 
     with open(path + "info.json") as data_file:
         data = json.load(data_file)
-
-    print(data["assets"][0]["version"])
+        for bundle in data["assets"]:
+            download("http://snatch.joycestick.com/api/" + bundle["bundlename"] + "/download", path)
 
 
 # installs unzipped package to the given directory
@@ -80,7 +77,7 @@ def download(url, path):
             inner_zip_file.extractall(path)
             os.remove(new_path)
 
-    print("Success!")
+    print("Successfully download a bundle!")
 
 
 if __name__ == '__main__':
