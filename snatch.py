@@ -66,10 +66,19 @@ def download(url, path):
             os.makedirs(path)
         path += os.sep
 
-    print(path)
-
-    # extract zip
+    # extract main zip
+    extracted = zip_file.namelist()
     zip_file.extractall(path)
+
+    path = os.path.join(path, extracted[0])
+
+    # now let's unzip all the inner zips
+    for filename in os.listdir(path):
+        new_path = os.path.join(path, filename)
+        if zipfile.is_zipfile(new_path):
+            inner_zip_file = zipfile.ZipFile(new_path)
+            inner_zip_file.extractall(path)
+            os.remove(new_path)
 
     print("Success!")
 
