@@ -12,15 +12,15 @@ def cli():
 
 
 @cli.command()
-@click.option('--name', prompt='Please enter your name/package', help='Your package name in format name/package.')
+@click.option('--bundlename', prompt='Please enter your name/package', help='Your package name in format name/package.')
 @click.option('--path', help='Absolute path to install packages. Defaults to currentDir/Assets/vendor.')
 @click.option('--version', help='Version number for package.')
-def install(name, path, version):
-    url = "http://fallingkingdom.net/" + name + ".zip"  # "http://snatch.joycestick.com/api/" + name + "/download"
+def install(bundlename, path, version):
+    url = "http://snatch-it.org/" + bundlename + "/download"
     if version is not None:
         url += "/" + version
 
-    download(url, path)
+    download(bundlename, url, path)
 
 
 @cli.command()
@@ -32,11 +32,11 @@ def pull(path):
     with open(path + "info.json") as data_file:
         data = json.load(data_file)
         for bundle in data["assets"]:
-            download("http://snatch.joycestick.com/api/" + bundle["bundlename"] + "/download", path)
+            download(bundle["bundlename"], "http://snatch-it.org/" + bundle["bundlename"] + "/download", path)
 
 
 # installs unzipped package to the given directory
-def download(url, path):
+def download(bundlename, url, path):
     returned_request = requests.get(url)
 
     # make sure web response is good before continuing
@@ -63,11 +63,7 @@ def download(url, path):
             os.makedirs(path)
         path += os.sep
 
-    # extract main zip
-    extracted = zip_file.namelist()
     zip_file.extractall(path)
-
-    path = os.path.join(path, extracted[0])
 
     # now let's unzip all the inner zips
     for filename in os.listdir(path):
@@ -77,7 +73,7 @@ def download(url, path):
             inner_zip_file.extractall(path)
             os.remove(new_path)
 
-    print("Successfully download a bundle!")
+    print("Successfully downloaded " + bundlename + "!")
 
 
 if __name__ == '__main__':
