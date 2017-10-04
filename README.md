@@ -5,6 +5,7 @@ Built on Python 2.7.10 using click and requests
 ```
 pip install click
 pip install requests
+pip install tqdm
 ``` 
 
 ### Usage
