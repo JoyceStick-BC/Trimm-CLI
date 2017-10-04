@@ -9,10 +9,15 @@ pip install tqdm
 ``` 
 
 ### Usage
+To install a bundle:
 ```
-python snatch.py
+python snatch.py install <bundlename>
 ``` 
-To see all line args run:
+To update your bundles from your snatch.json, run:
+```
+python snatch.py pull
+``` 
+To see all line command args run:
 ```
 python snatch.py --help
 ``` 

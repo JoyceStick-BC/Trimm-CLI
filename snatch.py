@@ -17,7 +17,7 @@ def cli():
 @click.option('--path', help='Absolute path to install packages. Defaults to currentDir/Assets/vendor.')
 @click.option('--version', help='Version number for package.')
 def install(bundlename, path, version):
-    url = "http://fallingkingdom.net/" + bundlename + ".zip"  #  url = "http://snatch-it.org/" + bundlename + "/download"
+    url = "http://snatch-it.org/" + bundlename + "/download"
     if version is not None:
         url += "/" + version
 
@@ -32,11 +32,12 @@ def pull(path):
         path = os.path.join(path, "vendor")
         path += os.sep
 
-    with open(path + "info.json") as data_file:
-        data = json.load(data_file)
-        for bundle in data["assets"]:
-            download(bundle["bundlename"],  "http://fallingkingdom.net/" + bundle["name"] + ".zip", path)
-            # download(bundle["bundlename"], "http://snatch-it.org/" + bundle["bundlename"] + "/download", path)
+    with open(path + "snatch.json") as snatch_file:
+        snatch_info = json.load(snatch_file)
+        for bundle, version in snatch_info["assets"].items():
+            download(bundle, "http://snatch-it.org/" + bundle + "/download/" + version, path)
+        for bundle, version in snatch_info["packages"].items():
+            download(bundle, "http://snatch-it.org/" + bundle + "/download/" + version, path)
 
 
 # installs unzipped package to the given directory
@@ -75,12 +76,13 @@ def download(bundlename, url, path):
         path += os.sep
 
     # get root snatch info.json if it exists, else create one
-    info_path = os.path.join(path, "info.json")
-    info_json = {"assets": []}
-    if os.path.isfile(info_path):
-        data_file = open(path + "info.json", 'r')
-        info_json = json.load(data_file)
-    info_assets = info_json["assets"]
+    snatch_path = os.path.join(path, "snatch.json")
+    snatch_json = {"assets": {}, "packages": {}}
+    if os.path.isfile(snatch_path):
+        data_file = open(snatch_path, 'r')
+        snatch_json = json.load(data_file)
+    snatch_assets = snatch_json["assets"]
+    snatch_packages = snatch_json["packages"]
 
     downloading_path = os.path.join(path, "downloading")
     zip_file.extractall(downloading_path)
@@ -106,15 +108,19 @@ def download(bundlename, url, path):
             inner_data_file = open(new_path, 'r')
             inner_info_json = json.load(inner_data_file)
             for asset in inner_info_json["assets"]:
-                info_assets.append(asset)
+                snatch_assets[asset["bundlename"]] = asset["version"]
+            if "package" in inner_info_json:
+                for package in inner_info_json["package"]:
+                    snatch_packages[package["bundlename"]] = package["version"]
 
     # delete the downloading folder and output.bin
     os.remove("output.bin")
+    os.remove(os.path.join(path, "info.json"))
     shutil.rmtree(downloading_path)
 
     # dump json
-    with open(info_path, 'w+') as out_file:
-        json.dump(info_json, out_file, indent=4, sort_keys=True)
+    with open(snatch_path, 'w+') as out_file:
+        json.dump(snatch_json, out_file, indent=4, sort_keys=True)
 
     print("Successfully installed " + bundlename + "!")
 
