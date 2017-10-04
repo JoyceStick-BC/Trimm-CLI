@@ -1,0 +1,9 @@
+{
+    "assets": {
+        "user1/asset1": 1.0,
+        "user2/asset2": 1.0
+    },
+    "packages": {
+        "user1/package1": 1.0
+    }
+}

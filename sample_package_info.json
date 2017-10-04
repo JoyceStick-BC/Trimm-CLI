@@ -1,13 +1,12 @@
 {  
-   "package":[  
-      {  
-         "type":"package",
-         "version":"0.01--prerelease",
-         "username":"test",
-         "name":"calypso",
-         "bundlename":"test/calypso"
-      }
-   ],
+   "package":
+   {
+      "type":"package",
+      "version":"0.01--prerelease",
+      "username":"test",
+      "name":"calypso",
+      "bundlename":"test/calypso"
+   },
    "assets":[  
       {  
          "type":"asset",
