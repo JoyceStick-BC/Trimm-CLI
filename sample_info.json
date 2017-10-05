@@ -1,0 +1,7 @@
+{
+  "type": "asset",
+  "version": "0.01--tester",
+  "username": "test",
+  "name": "cat",
+  "bundlename": "test/cat"
+}

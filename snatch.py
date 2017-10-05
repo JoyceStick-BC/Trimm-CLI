@@ -17,7 +17,8 @@ def cli():
 @click.option('--path', help='Absolute path to install packages. Defaults to currentDir/Assets/vendor.')
 @click.option('--version', help='Version number for package.')
 def install(bundlename, path, version):
-    url = "http://snatch-it.org/" + bundlename + "/download"
+    # url = "http://snatch-it.org/" + bundlename + "/download"
+    url = "http://fallingkingdom.net/" + bundlename + ".zip"
     if version is not None:
         url += "/" + version
 
@@ -87,35 +88,40 @@ def download(bundlename, url, path):
     downloading_path = os.path.join(path, "downloading")
     zip_file.extractall(downloading_path)
 
+    info_jsons = []
     # now let's unzip all the inner zips
     for filename in os.listdir(downloading_path):
         new_path = os.path.join(downloading_path, filename)
-        if zipfile.is_zipfile(new_path):
-            print("Unzipping " + filename[:-4] + " from " + bundlename + "!")
-            inner_zip_file = zipfile.ZipFile(new_path)
-            inner_zip_file.extractall(path)
+        if os.path.isdir(new_path):
+            for unzipped_filename in os.listdir(new_path):
+                inner_dir_path = os.path.join(new_path, unzipped_filename)
+                if unzipped_filename == "info.json":
+                    inner_data_file = open(inner_dir_path, 'r')
+                    inner_info_json = json.load(inner_data_file)
+                    info_jsons.append(inner_info_json)
+                    if inner_info_json["type"] == "asset":
+                        inner_asset_path = os.path.join(new_path, inner_info_json["name"] + ".zip") # need to change name to bundlename after testing
+                        print("Unzipping " + inner_info_json["bundlename"] + "!")
+                        inner_zip_file = zipfile.ZipFile(inner_asset_path)
+                        inner_zip_file.extractall(path)
+                    elif inner_info_json["type"] == "package":
+                        for unzipped_package_filename in os.listdir(inner_dir_path):
+                            inner_package_file = os.path.join(new_path, unzipped_package_filename)
+                            if zipfile.is_zipfile(inner_package_file):
+                                print("Unzipping " + unzipped_package_filename[:-4] + " from " + inner_info_json["bundlename"] + "!")
+                                inner_zip_file = zipfile.ZipFile(inner_package_file)
+                                inner_zip_file.extractall(inner_dir_path)
+                                # need to handle the contents of the package here
 
-            # check to see if there are any zips in vendor
-            for inner_filename in os.listdir(path):
-                new_inner_path = os.path.join(path, inner_filename)
-                if zipfile.is_zipfile(new_inner_path):
-                    inner_zip_file = zipfile.ZipFile(new_inner_path)
-                    inner_zip_file.extractall(path)
-                    os.remove(new_inner_path)
-
-        # let's add this bundle's assets to our info.json
-        elif filename == "info.json":
-            inner_data_file = open(new_path, 'r')
-            inner_info_json = json.load(inner_data_file)
-            for asset in inner_info_json["assets"]:
-                snatch_assets[asset["bundlename"]] = asset["version"]
-            if "package" in inner_info_json:
-                for package in inner_info_json["package"]:
-                    snatch_packages[package["bundlename"]] = package["version"]
+        # let's go over all the jsons and add them to our snatch.json
+        for info_json in info_jsons:
+            if info_json["type"] == "asset":
+                snatch_assets[info_json["bundlename"]] = info_json["version"]
+            elif info_json["type"] == "package":
+                snatch_packages[info_json["bundlename"]] = info_json["version"]
 
     # delete the downloading folder and output.bin
     os.remove("output.bin")
-    os.remove(os.path.join(path, "info.json"))
     shutil.rmtree(downloading_path)
 
     # dump json
