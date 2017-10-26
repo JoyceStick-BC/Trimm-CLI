@@ -4,6 +4,7 @@ import zipfile
 import os
 import json
 import shutil
+
 from tqdm import tqdm
 
 
@@ -17,32 +18,44 @@ def cli():
 @click.option('--path', help='Absolute path to install packages. Defaults to currentDir/Assets/vendor.')
 @click.option('--version', help='Version number for package.')
 def install(bundlename, path, version):
-    url = "http://snatch-it.org/" + bundlename + "/download"
-    # url = "http://fallingkingdom.net/" + bundlename + ".zip"
-    if version is not None:
-        url += "/" + version
-
-    download(bundlename, url, path)
+    if not check_if_installed(bundlename, path, version):
+        download(bundlename, version, path)
 
 
 @cli.command()
+@click.option('--bundlename', prompt='Please enter your name/package', help='Your package name in format name/package.')
 @click.option('--path', help='Absolute path to locate info.json. Defaults to currentDir/Assets/vendor.')
-def pull(path):
+@click.option('--version', help='Version number for package.')
+def update(bundlename, path, version):
     if path is None:
         path = os.path.join(os.getcwd(), "Assets")
         path = os.path.join(path, "vendor")
         path += os.sep
 
-    with open(path + "snatch.json") as snatch_file:
-        snatch_info = json.load(snatch_file)
-        for bundle, version in snatch_info["assets"].items():
-            download(bundle, "http://snatch-it.org/" + bundle + "/download/" + version, path)
-        for bundle, version in snatch_info["packages"].items():
-            download(bundle, "http://snatch-it.org/" + bundle + "/download/" + version, path)
+    # if no version specified, assume latest
+    if version is None:
+        version = requests.get("http://snatch-it.org/latest/" + bundlename).json()["latest-version"]
+
+    with open(path + "snatch.json", 'r') as snatch_file:
+        snatch_json = json.load(snatch_file)
+        snatch_assets = snatch_json["assets"]
+        snatch_packages = snatch_json["packages"]
+
+        if bundlename in snatch_assets:
+            if not check_if_installed(bundlename, path, version):
+                download(bundlename, version, path)
+        elif bundlename in snatch_packages:
+            if not check_if_installed(bundlename, path, version):
+                download(bundlename, version, path)
 
 
 # installs unzipped package to the given directory
-def download(bundlename, url, path):
+def download(bundlename, version, path):
+    # url = "http://snatch-it.org/" + bundlename + "/download"
+    url = "http://fallingkingdom.net/" + bundlename + ".zip"
+    if version is not None:
+        url += "/" + version
+
     print("Downloading " + bundlename + "!")
     returned_request = requests.get(url, stream=True)
     total_size = int(returned_request.headers.get('content-length', 0))/(32*1024)
@@ -54,11 +67,13 @@ def download(bundlename, url, path):
     # make sure web response is good before continuing
     if returned_request.status_code != 200:
         print("Bad response for url: %s" % url)
+        os.remove("output.bin")
         return
 
     # make sure we have a zip file
     if not zipfile.is_zipfile("output.bin"):
         print("Returned file is not a zip at url: %s" % url)
+        os.remove("output.bin")
         return
 
     print("Successfully downloaded " + bundlename + "!")
@@ -74,7 +89,6 @@ def download(bundlename, url, path):
         path = os.path.join(path, "vendor")
         if not os.path.exists(path):
             os.makedirs(path)
-        path += os.sep
 
     # get root snatch info.json if it exists, else create one
     snatch_path = os.path.join(path, "snatch.json")
@@ -88,15 +102,20 @@ def download(bundlename, url, path):
     downloading_path = os.path.join(path, "downloading")
     zip_file.extractall(downloading_path)
 
+    # let's delete the old bundle if it exists
+    bundle_path = os.path.join(path, bundlename)
+    if os.path.exists(bundle_path):
+        shutil.rmtree(bundle_path)
+
     info_jsons = []
     drill(downloading_path, path, info_jsons)
 
     # let's go over all the jsons and add them to our snatch.json
     for info_json in info_jsons:
         if info_json["type"] == "asset":
-            snatch_assets[info_json["bundlename"]] = info_json["version"]
+            snatch_assets[bundlename] = info_json["version"]  # TODO could have multiple bundlenames, so loop through this
         elif info_json["type"] == "package":
-            snatch_packages[info_json["bundlename"]] = info_json["version"]
+            snatch_packages[bundlename] = info_json["version"]
 
     # delete the downloading folder and output.bin
     os.remove("output.bin")
@@ -128,10 +147,14 @@ def drill(bundle_path, vendor_path, info_jsons):
                     # if this bundle is an asset
                     if inner_info_json["type"] == "asset":
                         # let's extract the asset zip to the vendor path
-                        inner_asset_path = os.path.join(new_path, inner_info_json["bundlename"] + ".zip")  # need to change bundlename to name for fk testing
+                        inner_asset_path = os.path.join(new_path, inner_info_json["name"] + ".zip")  # need to change bundlename to name for fk testing TODO add something to folder name if version is static
                         print("Unzipping " + inner_info_json["bundlename"] + "!")
                         inner_zip_file = zipfile.ZipFile(inner_asset_path)
-                        inner_zip_file.extractall(vendor_path)
+
+                        bundle_vendor_path = os.path.join(vendor_path, inner_info_json["username"])
+                        if not os.path.exists(bundle_vendor_path):
+                            os.makedirs(bundle_vendor_path)
+                        inner_zip_file.extractall(bundle_vendor_path)
 
                         # after extracting zip, let's delete
                         os.remove(inner_asset_path)
@@ -152,6 +175,46 @@ def drill(bundle_path, vendor_path, info_jsons):
 
                         # now let's drill again to handle the bundles of the package
                         drill(new_path, vendor_path, info_jsons)
+
+
+def check_if_installed(bundlename, path, requested_version):
+    # if no version specified, assume latest
+    if requested_version is None:
+        requested_version = requests.get("http://snatch-it.org/latest/" + bundlename).json()["latest-version"]
+
+    if path is None:
+        path = os.path.join(os.getcwd(), "Assets")
+        path = os.path.join(path, "vendor")
+        path += os.sep
+
+    snatch_path = os.path.join(path, "snatch.json")
+    snatch_json = {"assets": {}, "packages": {}}
+    if os.path.isfile(snatch_path):
+        data_file = open(snatch_path, 'r')
+        snatch_json = json.load(data_file)
+    snatch_assets = snatch_json["assets"]
+    snatch_packages = snatch_json["packages"]
+
+    version = None
+
+    if bundlename in snatch_assets:
+        version = snatch_assets[bundlename]
+    elif bundlename in snatch_packages:
+        version = snatch_packages[bundlename]
+
+    if version is not None:
+        if version == requested_version:
+            print("Requested version of " + bundlename + " is already installed! Skipping...")
+            return True
+
+        print("Version " + version + " of the bundle named " + bundlename
+              + " already exists! (To keep both bundles, cancel this operations and use 'snatch install " + bundlename
+              + " --v=" + str(requested_version) + "*')")
+        response = raw_input("Do you want to update this bundle to version " + str(requested_version) + "? (y/n)")
+        if response == "n":
+            return True
+
+    return False
 
 
 if __name__ == '__main__':
