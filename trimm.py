@@ -34,25 +34,25 @@ def update(bundlename, path, version):
 
     # if no version specified, assume latest
     if version is None:
-        version = requests.get("http://snatch-it.org/latest/" + bundlename).json()["latest-version"]
+        version = requests.get("http://trimm3d.com/latest/" + bundlename).json()["latest-version"]
 
-    with open(path + "snatch.json", 'r') as snatch_file:
-        snatch_json = json.load(snatch_file)
-        snatch_assets = snatch_json["assets"]
-        snatch_packages = snatch_json["packages"]
+    with open(path + "trimm.json", 'r') as trimm_file:
+        trimm_json = json.load(trimm_file)
+        trimm_assets = trimm_json["assets"]
+        trimm_packages = trimm_json["packages"]
 
-        if bundlename in snatch_assets:
+        if bundlename in trimm_assets:
             if not check_if_installed(bundlename, path, version):
                 download(bundlename, version, path)
-        elif bundlename in snatch_packages:
+        elif bundlename in trimm_packages:
             if not check_if_installed(bundlename, path, version):
                 download(bundlename, version, path)
 
 
 # installs unzipped package to the given directory
 def download(bundlename, version, path):
-    # url = "http://snatch-it.org/" + bundlename + "/download"
-    url = "http://fallingkingdom.net/" + bundlename + ".zip"
+    url = "http://trimm3d.com/" + bundlename + "/download"
+    # url = "http://fallingkingdom.net/" + bundlename + ".zip"
     if version is not None:
         url += "/" + version
 
@@ -90,14 +90,14 @@ def download(bundlename, version, path):
         if not os.path.exists(path):
             os.makedirs(path)
 
-    # get root snatch info.json if it exists, else create one
-    snatch_path = os.path.join(path, "snatch.json")
-    snatch_json = {"assets": {}, "packages": {}}
-    if os.path.isfile(snatch_path):
-        data_file = open(snatch_path, 'r')
-        snatch_json = json.load(data_file)
-    snatch_assets = snatch_json["assets"]
-    snatch_packages = snatch_json["packages"]
+    # get root trimm info.json if it exists, else create one
+    trimm_path = os.path.join(path, "trimm.json")
+    trimm_json = {"assets": {}, "packages": {}}
+    if os.path.isfile(trimm_path):
+        data_file = open(trimm_path, 'r')
+        trimm_json = json.load(data_file)
+    trimm_assets = trimm_json["assets"]
+    trimm_packages = trimm_json["packages"]
 
     downloading_path = os.path.join(path, "downloading")
     zip_file.extractall(downloading_path)
@@ -110,20 +110,20 @@ def download(bundlename, version, path):
     info_jsons = []
     drill(downloading_path, path, info_jsons)
 
-    # let's go over all the jsons and add them to our snatch.json
+    # let's go over all the jsons and add them to our trimm.json
     for info_json in info_jsons:
         if info_json["type"] == "asset":
-            snatch_assets[bundlename] = info_json["version"]  # TODO could have multiple bundlenames, so loop through this
+            trimm_assets[bundlename] = info_json["version"]  # TODO could have multiple bundlenames, so loop through this
         elif info_json["type"] == "package":
-            snatch_packages[bundlename] = info_json["version"]
+            trimm_packages[bundlename] = info_json["version"]
 
     # delete the downloading folder and output.bin
     os.remove("output.bin")
     shutil.rmtree(downloading_path)
 
     # dump json
-    with open(snatch_path, 'w+') as out_file:
-        json.dump(snatch_json, out_file, indent=4, sort_keys=True)
+    with open(trimm_path, 'w+') as out_file:
+        json.dump(trimm_json, out_file, indent=4, sort_keys=True)
 
     print("Successfully installed " + bundlename + "!")
 
@@ -180,27 +180,27 @@ def drill(bundle_path, vendor_path, info_jsons):
 def check_if_installed(bundlename, path, requested_version):
     # if no version specified, assume latest
     if requested_version is None:
-        requested_version = requests.get("http://snatch-it.org/latest/" + bundlename).json()["latest-version"]
+        requested_version = requests.get("http://trimm3d.com/latest/" + bundlename).json()["latest-version"]
 
     if path is None:
         path = os.path.join(os.getcwd(), "Assets")
         path = os.path.join(path, "vendor")
         path += os.sep
 
-    snatch_path = os.path.join(path, "snatch.json")
-    snatch_json = {"assets": {}, "packages": {}}
-    if os.path.isfile(snatch_path):
-        data_file = open(snatch_path, 'r')
-        snatch_json = json.load(data_file)
-    snatch_assets = snatch_json["assets"]
-    snatch_packages = snatch_json["packages"]
+    trimm_path = os.path.join(path, "trimm.json")
+    trimm_json = {"assets": {}, "packages": {}}
+    if os.path.isfile(trimm_path):
+        data_file = open(trimm_path, 'r')
+        trimm_json = json.load(data_file)
+    trimm_assets = trimm_json["assets"]
+    trimm_packages = trimm_json["packages"]
 
     version = None
 
-    if bundlename in snatch_assets:
-        version = snatch_assets[bundlename]
-    elif bundlename in snatch_packages:
-        version = snatch_packages[bundlename]
+    if bundlename in trimm_assets:
+        version = trimm_assets[bundlename]
+    elif bundlename in trimm_packages:
+        version = trimm_packages[bundlename]
 
     if version is not None:
         if version == requested_version:
@@ -208,7 +208,7 @@ def check_if_installed(bundlename, path, requested_version):
             return True
 
         print("Version " + version + " of the bundle named " + bundlename
-              + " already exists! (To keep both bundles, cancel this operations and use 'snatch install " + bundlename
+              + " already exists! (To keep both bundles, cancel this operations and use 'trimm install " + bundlename
               + " --v=" + str(requested_version) + "*')")
         response = raw_input("Do you want to update this bundle to version " + str(requested_version) + "? (y/n)")
         if response == "n":

@@ -1,5 +1,5 @@
-# Snatch-CLI
-Built on Python 2.7.10 using click and requests
+# Trimm-CLI
+Built on Python using click and requests
 
 ### Setup
 ```
@@ -11,13 +11,13 @@ pip install tqdm
 ### Usage
 To install a bundle:
 ```
-python snatch.py install <bundlename>
+python trimm.py install <bundlename>
 ``` 
-To update your bundles from your snatch.json, run:
+To update your bundles from your trimm.json, run:
 ```
-python snatch.py pull
+python trimm.py pull
 ``` 
 To see all line command args run:
 ```
-python snatch.py --help
+python trimm.py --help
 ``` 
