@@ -158,6 +158,7 @@ def drill(bundle_path, vendor_path, info_jsons):
                         inner_zip_file.extractall(bundle_vendor_path)
 
                         # after extracting zip, let's delete
+                        inner_zip_file.close()
                         os.remove(inner_asset_path)
 
                     # if this bundle is a package
