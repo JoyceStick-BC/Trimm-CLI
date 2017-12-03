@@ -90,6 +90,8 @@ def download(bundlename, version, path):
         if not os.path.exists(path):
             os.makedirs(path)
 
+        create_git_ignore(path)
+
     # get root trimm info.json if it exists, else create one
     trimm_path = os.path.join(path, "trimm.json")
     trimm_json = {"assets": {}, "packages": {}}
@@ -217,6 +219,17 @@ def check_if_installed(bundlename, path, requested_version):
             return True
 
     return False
+
+
+def create_git_ignore(path):
+    gitignore_filepath = os.path.join(path, ".gitignore")
+    if not os.path.isfile(gitignore_filepath):
+        gitignore = open(gitignore_filepath, "w+")
+        gitignore.write("*\n")
+        gitignore.write("!*/\n")
+        gitignore.write("!.gitignore\n")
+        gitignore.write("*.meta\n")
+        gitignore.close()
 
 
 if __name__ == '__main__':
