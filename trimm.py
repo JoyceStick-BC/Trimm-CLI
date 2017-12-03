@@ -49,10 +49,30 @@ def update(bundlename, path, version):
                 download(bundlename, version, path)
 
 
+@cli.command()
+@click.option('--path', help='Absolute path to locate info.json. Defaults to currentDir/Assets/vendor.')
+def pull(path):
+    if path is None:
+        path = os.path.join(os.getcwd(), "Assets")
+        path = os.path.join(path, "vendor")
+        path += os.sep
+
+    with open(path + "trimm.json", 'r') as trimm_file:
+        trimm_json = json.load(trimm_file)
+        trimm_assets = trimm_json["assets"]
+        trimm_packages = trimm_json["packages"]
+
+        for bundlename, version in trimm_assets.items():
+            if not check_if_installed(bundlename, path, None):  # , version): TODO READD version support
+                download(bundlename, None, path)
+        for bundlename, version in trimm_packages.items():
+            if not check_if_installed(bundlename, path, None):  # , version): TODO READD version support
+                download(bundlename, None, path)
+
+
 # installs unzipped package to the given directory
 def download(bundlename, version, path):
     url = "http://trimm3d.com/download/" + bundlename + ""
-    # url = "http://fallingkingdom.net/" + bundlename + ".zip"
     if version is not None:
         url += "/" + str(version)
 
@@ -190,6 +210,13 @@ def check_if_installed(bundlename, path, requested_version):
         path = os.path.join(os.getcwd(), "Assets")
         path = os.path.join(path, "vendor")
         path += os.sep
+
+    bundle = bundlename.split("/")
+    bundle_path = os.path.join(path, bundle[0])
+    bundle_path = os.path.join(bundle_path, bundle[1])
+
+    if not os.path.isdir(bundle_path):
+        return False
 
     trimm_path = os.path.join(path, "trimm.json")
     trimm_json = {"assets": {}, "packages": {}}
