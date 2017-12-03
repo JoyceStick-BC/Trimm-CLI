@@ -118,6 +118,7 @@ def download(bundlename, version, path):
             trimm_packages[bundlename] = info_json["version"]
 
     # delete the downloading folder and output.bin
+    zip_file.close()
     os.remove("output.bin")
     shutil.rmtree(downloading_path)
 
