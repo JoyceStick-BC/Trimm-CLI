@@ -51,10 +51,10 @@ def update(bundlename, path, version):
 
 # installs unzipped package to the given directory
 def download(bundlename, version, path):
-    url = "http://trimm3d.com/" + bundlename + "/download"
+    url = "http://trimm3d.com/download/" + bundlename + ""
     # url = "http://fallingkingdom.net/" + bundlename + ".zip"
     if version is not None:
-        url += "/" + version
+        url += "/" + str(version)
 
     print("Downloading " + bundlename + "!")
     returned_request = requests.get(url, stream=True)
