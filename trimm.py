@@ -283,7 +283,7 @@ def create_git_ignore(path):
         gitignore.write("!*/\n")
         gitignore.write("!.gitignore\n")
         gitignore.write("!*.meta\n")
-        gitignore.write("!*.json\n")
+        gitignore.write("!trimm.json\n")
         gitignore.close()
 
 
