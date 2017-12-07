@@ -57,7 +57,7 @@ def pull(path):
         trimm_packages = trimm_json["packages"]
 
         for bundlename, version in trimm_assets.items():
-            if not trimm_helper.check_if_installed(bundlename, path, None):  # , version): TODO READD version support later
+            if not trimm_helper.check_if_installed(bundlename, path, None):  # , version): TODO READD version support
                 trimm_helper.download(bundlename, None, path)
         for bundlename, version in trimm_packages.items():
             if not trimm_helper.check_if_installed(bundlename, path, None):  # , version): TODO READD version support
