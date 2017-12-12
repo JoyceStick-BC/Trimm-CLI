@@ -25,6 +25,10 @@ To create zips for all missing bundles, run:
 ```
 python trimm.py make_zips
 ``` 
+To delete all bundles no longer tracked by your trimm.json, run:
+```
+python trimm.py delete
+``` 
 To see all line command args run:
 ```
 python trimm.py --help
